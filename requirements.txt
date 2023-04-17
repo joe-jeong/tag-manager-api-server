@@ -1,0 +1,6 @@
+flask
+flask-migrate
+requests
+pyOpenSSL
+Flask-Login
+oauthlib
