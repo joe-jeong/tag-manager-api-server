@@ -1,32 +1,29 @@
 import json
-import os
-from container_manager import login_manager, client
-from container_manager.models import User
+from app import login_manager, client
+from app.model.models import User
 
-from flask import Blueprint, redirect, request, url_for
+from flask import Blueprint, redirect, request, url_for, session
 from flask_login import (
     current_user,
     login_required,
     login_user,
     logout_user
 )
-from oauthlib.oauth2 import WebApplicationClient
 import requests
-from config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DISCOVERY_URL
+from app.config.flask_config import DevConfig
 
 bp = Blueprint('login', __name__, url_prefix='/')
-google_provider_conf = requests.get(GOOGLE_DISCOVERY_URL).json()
+google_provider_conf = requests.get(DevConfig.GOOGLE_DISCOVERY_URL).json()
 
 
 @bp.route("/")
 def index():
+    print(f"index:    {current_user.is_authenticated}")
     if current_user.is_authenticated:
         return (
             "<p>Hello, {}! You're logged in! Email: {}</p>"
-            "<div><p>Google Profile Picture:</p>"
-            '<img src="{}" alt="Google profile pic"></img></div>'
             '<a class="button" href="/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic
+                current_user.nickname, current_user.email
             )
         )
     else:
@@ -61,7 +58,7 @@ def google_callback():
         token_url,
         headers=headers,
         data=body,
-        auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+        auth=(DevConfig.GOOGLE_CLIENT_ID, DevConfig.GOOGLE_CLIENT_SECRET)
     )
 
     client.parse_request_body_response(json.dumps(token_response.json()))
@@ -78,21 +75,23 @@ def google_callback():
     else:
         return "User email not available or not verified by Google", 400
 
-    user = User(email=email, nickname=user_name)
+    user = User.get_by_email(email)
 
-    if not User.get_by_email(email):
-        User.create(email, user_name)
-    
+    if not user:
+        User.save(email, user_name)
+        user = User.get_by_email(email)
+
     login_user(user)
 
-    return redirect(url_for("index"))
+    return redirect(url_for("login.index"))
 
 
 @bp.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    return redirect(url_for("login.index"))
+
 
 @login_manager.user_loader
 def load_user(user_id):
