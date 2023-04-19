@@ -1,14 +1,15 @@
 import json
-from app import login_manager, client
+from app import login_manager, client, jwt
 from app.model.models import User
 
-from flask import Blueprint, redirect, request, url_for, session
+from flask import Blueprint, redirect, request, url_for, jsonify
 from flask_login import (
     current_user,
     login_required,
     login_user,
     logout_user
 )
+from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 import requests
 from app.config.flask_config import DevConfig
 
@@ -81,16 +82,18 @@ def google_callback():
         User.save(email, user_name)
         user = User.get_by_email(email)
 
-    login_user(user)
+    access_token = create_access_token(identity=user.id)
 
-    return redirect(url_for("login.index"))
+    return jsonify({'access_token': access_token}), 200
 
 
 @bp.route("/logout")
-@login_required
+@jwt_required()
 def logout():
-    logout_user()
-    return redirect(url_for("login.index"))
+    jti = get_jwt()['jti']
+    revoked_token = {"jti": jti}
+    jwt.revoked_store.set(jti, revoked_token)
+    return jsonify({"msg": "Logout successful"}), 200
 
 
 @login_manager.user_loader

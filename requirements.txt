@@ -4,3 +4,4 @@ requests
 pyOpenSSL
 Flask-Login
 oauthlib
+boto3
