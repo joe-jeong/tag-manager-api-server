@@ -1,15 +1,17 @@
 import json
-from app import login_manager, client, jwt
-from app.model.models import User
+from app import login_manager, client, jwt, redis
+from app.model.models import User, OauthService
+from datetime import timedelta, time
 
 from flask import Blueprint, redirect, request, url_for, jsonify
-from flask_login import (
-    current_user,
-    login_required,
-    login_user,
-    logout_user
+
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    get_jwt_identity,
+    jwt_required,
+    get_jwt
 )
-from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 import requests
 from app.config.flask_config import DevConfig
 
@@ -19,16 +21,7 @@ google_provider_conf = requests.get(DevConfig.GOOGLE_DISCOVERY_URL).json()
 
 @bp.route("/")
 def index():
-    print(f"index:    {current_user.is_authenticated}")
-    if current_user.is_authenticated:
-        return (
-            "<p>Hello, {}! You're logged in! Email: {}</p>"
-            '<a class="button" href="/logout">Logout</a>'.format(
-                current_user.nickname, current_user.email
-            )
-        )
-    else:
-        return '<a class="button" href="/login/google">Google Login</a>'
+    return '<a class="button" href="/login/google">Google Login</a>'
 
 
 @bp.route('/login/google')
@@ -70,29 +63,49 @@ def google_callback():
 
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
-        email = userinfo_response.json()["email"]
-        picture = userinfo_response.json()["picture"]
         user_name = userinfo_response.json()["given_name"]
     else:
         return "User email not available or not verified by Google", 400
 
-    user = User.get_by_email(email)
+    oauth_id = OauthService.get_by_name('google').id
+    user = User.get_by_oauth_asset_id(oauth_id, unique_id)
 
     if not user:
-        User.save(email, user_name)
-        user = User.get_by_email(email)
+        User.save(oauth_id, unique_id)
+        user = User.get_by_oauth_asset_id(oauth_id, unique_id)
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
+    refresh_token = create_refresh_token(identity=user.id)
+    redis.set(refresh_token, user.id, ex=timedelta(days=7))
 
-    return jsonify({'access_token': access_token}), 200
+    return jsonify({'username': user_name, 'access_token': access_token, 'refresh_token': refresh_token}), 200
+
+
+@bp.route('/reissue', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    current_user_id = get_jwt_identity()
+    old_refresh_token = request.headers.get('Authorization').replace('Bearer ', '')
+    redis_user_id = int(redis.get(old_refresh_token))
+
+    if redis_user_id != current_user_id:
+        return jsonify({'msg': 'Invalid token'}), 401
+    
+    access_token = create_access_token(identity=current_user_id, expires_delta=timedelta(hours=1))
+    refresh_token = create_refresh_token(identity=current_user_id)
+    redis.delete(old_refresh_token)
+    redis.set(refresh_token, current_user_id, ex=timedelta(days=7))
+    return jsonify(access_token=access_token, refresh_token=refresh_token)
 
 
 @bp.route("/logout")
 @jwt_required()
 def logout():
+    access_token, refresh_token = request.headers.get('Authorization').replace('Bearer ', '').split()
+    
+    redis.delete(refresh_token)
     jti = get_jwt()['jti']
-    revoked_token = {"jti": jti}
-    jwt.revoked_store.set(jti, revoked_token)
+    redis.set(jti, 'true', ex=get_jwt()['exp'] - time())
     return jsonify({"msg": "Logout successful"}), 200
 
 

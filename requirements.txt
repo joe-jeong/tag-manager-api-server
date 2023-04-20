@@ -5,3 +5,4 @@ pyOpenSSL
 Flask-Login
 oauthlib
 boto3
+redis
