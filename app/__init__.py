@@ -39,7 +39,7 @@ def create_app():
     app.config.from_object(DevConfig)
 
     # CORS
-    cors = CORS(app, resources={r"/*": {"origins": "*"}})
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     #User session management setup
     login_manager.init_app(app)

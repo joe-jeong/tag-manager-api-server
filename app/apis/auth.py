@@ -4,6 +4,7 @@ from app.model.models import User, OauthService
 from datetime import timedelta, time
 
 from flask import Blueprint, redirect, request, url_for, jsonify
+from flask_restx import Namespace, Resource, fields
 
 from flask_jwt_extended import (
     create_access_token,
@@ -16,6 +17,10 @@ import requests
 from app.config.flask_config import DevConfig
 
 bp = Blueprint('login', __name__, url_prefix='/')
+ns = Namespace(
+    'auth',
+    '인증 관련 API'
+    )
 google_provider_conf = requests.get(DevConfig.GOOGLE_DISCOVERY_URL).json()
 
 

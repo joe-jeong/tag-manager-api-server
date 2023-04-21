@@ -7,13 +7,12 @@ import os
 import uuid
 from flask_restx import Namespace, Resource, fields
 
-bp = Blueprint('container', __name__, url_prefix='/container')
 ns = Namespace(
     name='container',
     description='컨테이너 관련 API'
     )
 
-class Schema():
+class _Schema():
     post_fields = ns.model('컨테이너 생성시 필요 데이터', {
         'name': fields.String(description='Container Name'),
         'description': fields.String(description='Container Description')
@@ -28,8 +27,8 @@ class Schema():
         'file_url': fields.String(description='URL where the file is saved')
     })
 
-    file_url_fields = ns.model('파일 저장 url',{
-
+    msg_fields = ns.model('상태 코드에 따른 설명', {
+        'msg': fields.String(description='상태 코드에 대한 메세지')
     })
 
     container_list = fields.List(fields.Nested(basic_fields))
@@ -39,7 +38,7 @@ class Schema():
 @ns.route('/list')
 class ContainerList(Resource):
     @jwt_required()
-    @ns.response(200, 'Success', Schema.container_list)
+    @ns.response(200, '컨테이너 리스트 조회 성공', _Schema.container_list)
     def get(self):
         """현재 회원의 컨테이너 리스트를 가져옵니다."""
         response = list()
@@ -56,8 +55,8 @@ class ContainerList(Resource):
 @ns.route('')
 class ContainerCreate(Resource):
     @jwt_required()
-    @ns.expect(Schema.post_fields)
-    @ns.doc(responses={200: '컨테이너 생성 성공'})
+    @ns.expect(_Schema.post_fields)
+    @ns.response(201, '컨테이너 생성 성공', _Schema.msg_fields)
     def post(self):
         """새 컨테이너를 추가합니다."""
         data = request.json
@@ -86,12 +85,9 @@ class ContainerCreate(Resource):
 @ns.doc(params={'container_id': '컨테이너의 id'})
 class ContainerManage(Resource):
     @jwt_required()
-    @ns.doc(responses={200: '컨테이너 조회 성공'})
-    @ns.response(200, "컨테이너 정보 조회 성공", Schema.detail_fields)
+    @ns.response(200, "컨테이너 정보 조회 성공", _Schema.detail_fields)
     def get(self, container_id):
         """container_id와 일치하는 컨테이너의 상세 정보를 가져옵니다."""
-        print(container_id)
-        print(type(container_id))
         container = Container.get(container_id)
         response = {
             "id" : container.id,
@@ -105,8 +101,8 @@ class ContainerManage(Resource):
 
 
     @jwt_required()
-    @ns.expect(200, "컨테이너 정보 수정 성공", Schema.post_fields)
-    @ns.doc(responses={200:"컨테이너 정보 수정 성공"})
+    @ns.expect(200, "컨테이너 정보 수정 성공", _Schema.post_fields)
+    @ns.response(200, '컨테이너 정보 수정 성공', _Schema.msg_fields)
     def put(self, container_id):
         """container_id와 일치하는 컨테이너의 정보를 수정합니다."""
         data = request.json
@@ -118,7 +114,7 @@ class ContainerManage(Resource):
         return jsonify({"status": "ok"}), 200
 
     @jwt_required()
-    @ns.doc(responses={200:"컨테이너 삭제 성공"})
+    @ns.response(201, '컨테이너 삭제 성공', _Schema.msg_fields)
     def delete(self, container_id):
         """container_id와 일치하는 컨테이너를 삭제합니다."""
         user_id = get_jwt_identity()
@@ -133,7 +129,7 @@ class ContainerManage(Resource):
 @ns.route('/<int:container_id>/scripts')
 @ns.doc(params={'container_id': '컨테이너의 id'})
 class ScriptsOfContainer(Resource):
-    @ns.response(200, 'Success', Schema.url_list)
+    @ns.response(200, 'Success', _Schema.url_list)
     def get(self, container_id):
         """container_id와 일치하는 컨테이너의 script들이 저장된 url 리스트를 반환합니다."""
         res = []
