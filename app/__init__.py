@@ -16,14 +16,20 @@ login_manager = LoginManager()
 client = WebApplicationClient(DevConfig.GOOGLE_CLIENT_ID)
 jwt = JWTManager()
 redis = FlaskRedis()
-api = Api()
+api = Api(
+    version='0.1',
+    title="Tag Container Manager API Server",
+    description="사이트 별 전환 스크립트를 관리하기 위한 api 서버",
+    terms_url="/",
+    contact="joe.jeong@cheilpengtai.com"
+    )
 
 def register_router(app: Flask):
-    from app.apis import auth, conatiner, script
+    from app.apis import container, auth, script
 
     app.register_blueprint(auth.bp)
-    app.register_blueprint(conatiner.bp)
-    app.register_blueprint(script.bp)
+    api.add_namespace(container.ns)
+    api.add_namespace(script.ns)
 
 
 # TODO: 환경에 따른 config값 변경
@@ -49,6 +55,7 @@ def create_app():
     # Redis
     redis.init_app(app)
 
+    # restx
     api.init_app(app)
 
     register_router(app)

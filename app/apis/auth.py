@@ -19,7 +19,7 @@ bp = Blueprint('login', __name__, url_prefix='/')
 google_provider_conf = requests.get(DevConfig.GOOGLE_DISCOVERY_URL).json()
 
 
-@bp.route("/")
+@bp.route("/home")
 def index():
     return '<a class="button" href="/login/google">Google Login</a>'
 
@@ -74,7 +74,7 @@ def google_callback():
         User.save(oauth_id, unique_id)
         user = User.get_by_oauth_asset_id(oauth_id, unique_id)
 
-    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=1))
+    access_token = create_access_token(identity=user.id, expires_delta=timedelta(hours=3))
     refresh_token = create_refresh_token(identity=user.id)
     redis.set(refresh_token, user.id, ex=timedelta(days=7))
 

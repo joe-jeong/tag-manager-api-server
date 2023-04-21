@@ -58,14 +58,15 @@ class Container(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     description = db.Column(db.String(100))
-    file_name = db.Column(db.String(100))
-    file_path = db.Column(db.String(200))
+    s3_path = db.Column(db.String(100))
+    file_url = db.Column(db.String(200))
+    scripts = db.relationship("Script", cascade="all, delete", backref="container")
 
-    def update(self, name, description, file_name, file_path):
+    def update(self, name, description, s3_path, file_url):
         self.name = name
         self.description = description
-        self.file_name = file_name
-        self.file_path = file_path
+        self.s3_path = s3_path
+        self.file_url = file_url
         db.session.commit()
 
 
@@ -84,9 +85,9 @@ class Container(db.Model):
 
 
     @staticmethod
-    def save(name, description, file_name, file_path, user_id):
+    def save(name, description, s3_path, file_url, user_id):
         container = Container(
-            name = name, description=description, file_name=file_name, file_path=file_path)
+            name = name, description=description, s3_path=s3_path, file_url=file_url)
         db.session.add(container)
         container.users.append(User.get(user_id))
         db.session.commit()
@@ -112,19 +113,18 @@ class Script(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(100))
-    file_name = db.Column(db.String(100), nullable=False)
-    file_path = db.Column(db.String(200), nullable=False)
+    s3_path = db.Column(db.String(100), nullable=False)
+    file_url = db.Column(db.String(200), nullable=False)
     container_id = db.Column(db.Integer, db.ForeignKey('container.id'))
-    container = db.relationship('Container', backref='scripts')
 
     @staticmethod
     def get(id:int):
         return Script.query.get(id)
 
     @staticmethod
-    def save(name, description, file_name, file_path, container_id):
+    def save(name, description, s3_path, file_url, container_id):
         script = Script(
-            name = name, description=description, file_name=file_name, file_path=file_path, container_id=container_id)
+            name = name, description=description, s3_path=s3_path, file_url=file_url, container_id=container_id)
         db.session.add(script)
         db.session.commit()
 

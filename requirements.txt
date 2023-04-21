@@ -6,3 +6,5 @@ Flask-Login
 oauthlib
 boto3
 redis
+flask-cors
+flask-restx
