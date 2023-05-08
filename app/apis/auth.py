@@ -1,9 +1,10 @@
 import json
 from app import login_manager, client, jwt, redis
-from app.model.models import User, OauthService
+from app.model.user import User
+from app.model.oauth_service import OauthService
 from datetime import timedelta, time
 
-from flask import Blueprint, redirect, request, url_for, jsonify
+from flask import Blueprint, redirect, request, url_for, jsonify, make_response
 from flask_restx import Namespace, Resource, fields
 
 from flask_jwt_extended import (
@@ -38,6 +39,8 @@ def login():
         redirect_uri=request.base_url + "/callback",
         scope=["openid", "email", "profile"]
     )
+
+    # return jsonify({"redirect_uri":request_uri}), 200
     return redirect(request_uri)
 
 
@@ -49,6 +52,7 @@ def google_callback():
     token_url, headers, body = client.prepare_token_request(
         token_endpoint,
         authorization_response=request.url,
+        # redirect_url="http://localhost:3000/login/google/callbacks"
         redirect_url=request.base_url,
         code = code
     )
@@ -103,6 +107,7 @@ def refresh():
     return jsonify(access_token=access_token, refresh_token=refresh_token)
 
 
+# TODO 로그아웃 시 기존 access token 블랙리스트 추가
 @bp.route("/logout")
 @jwt_required()
 def logout():

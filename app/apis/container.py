@@ -1,10 +1,9 @@
-from flask import Blueprint, request, jsonify, session
+from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.config.container_config import BUCKET_NAME
 from app.utils import container_util, s3_util
-from app.model.models import User, Container, Script
-import os
-import uuid
+from app.model.user import User
+from app.model.container import Container
 from flask_restx import Namespace, Resource, fields
 
 ns = Namespace(
@@ -37,7 +36,7 @@ class _Schema():
 
 @ns.route('/list')
 class ContainerList(Resource):
-    @jwt_required()
+    
     @ns.response(200, '컨테이너 리스트 조회 성공', _Schema.container_list)
     def get(self):
         """현재 회원의 컨테이너 리스트를 가져옵니다."""
@@ -46,7 +45,10 @@ class ContainerList(Resource):
 
         for container in containers:
             response.append(
-                {"id": container.id, "name": container.name, "description": container.description}
+                {"id": container.id,
+                 "name": container.name,
+                 "description": container.description
+                 }
             )
         
         return response, 200
@@ -54,27 +56,18 @@ class ContainerList(Resource):
 
 @ns.route('')
 class ContainerCreate(Resource):
-    @jwt_required()
     @ns.expect(_Schema.post_fields)
     @ns.response(201, '컨테이너 생성 성공', _Schema.msg_fields)
+    @jwt_required()
     def post(self):
         """새 컨테이너를 추가합니다."""
-        data = request.json
-        name = data['name']
-        desc = data['description']
-        filename = str(uuid.uuid4()) + '.js'
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        body = request.json
+        name = body['name']
+        desc = body['description']
+
         container = Container.save_empty_entity(get_jwt_identity())
         tag = container_util.get_container_tag(container.id)
-        with open(path, 'w') as f:
-            f.write(tag)
-
-        s3_client = s3_util.s3_connection()
-        s3_path = f"container_tag/{filename}"
-        s3_client.upload_file(path, BUCKET_NAME, s3_path)    
-        s3_url = f"https://{BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/{s3_path}"
-
-        os.remove(path)
+        s3_path, s3_url = s3_util.put_s3(tag, 'container')
 
         container.update(name=name, description=desc, s3_path=s3_path, file_url=s3_url) 
 
@@ -84,7 +77,7 @@ class ContainerCreate(Resource):
 @ns.route('/<int:container_id>')
 @ns.doc(params={'container_id': '컨테이너의 id'})
 class ContainerManage(Resource):
-    @jwt_required()
+    
     @ns.response(200, "컨테이너 정보 조회 성공", _Schema.detail_fields)
     def get(self, container_id):
         """container_id와 일치하는 컨테이너의 상세 정보를 가져옵니다."""
@@ -99,9 +92,8 @@ class ContainerManage(Resource):
 
         return response, 200
 
-
-    @jwt_required()
-    @ns.expect(200, "컨테이너 정보 수정 성공", _Schema.post_fields)
+    
+    @ns.expect(200, "새로운 컨테이너 데이터", _Schema.post_fields)
     @ns.response(200, '컨테이너 정보 수정 성공', _Schema.msg_fields)
     def put(self, container_id):
         """container_id와 일치하는 컨테이너의 정보를 수정합니다."""
@@ -113,27 +105,14 @@ class ContainerManage(Resource):
 
         return jsonify({"status": "ok"}), 200
 
-    @jwt_required()
+
+    
     @ns.response(201, '컨테이너 삭제 성공', _Schema.msg_fields)
     def delete(self, container_id):
         """container_id와 일치하는 컨테이너를 삭제합니다."""
         user_id = get_jwt_identity()
-        key = Container.get(container_id).s3_path
-        s3_client = s3_util.s3_connection()
-        s3_client.delete_object(Bucket=BUCKET_NAME, Key=key)
+        key = s3_util.extract_path_from_url(Container.get(container_id).file_url)
+        s3_util.delete_s3(key)
         Container.delete(user_id, container_id)
 
         return jsonify({"status": "ok"}), 200
-
-
-@ns.route('/<int:container_id>/scripts')
-@ns.doc(params={'container_id': '컨테이너의 id'})
-class ScriptsOfContainer(Resource):
-    @ns.response(200, 'Success', _Schema.url_list)
-    def get(self, container_id):
-        """container_id와 일치하는 컨테이너의 script들이 저장된 url 리스트를 반환합니다."""
-        res = []
-        scripts = Container.get(container_id).scripts
-        for script in scripts:
-            res.append(script.file_url)
-        return res, 200
