@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 from flask_cors import CORS
 from flask_restx import Api, Resource
 from oauthlib.oauth2 import WebApplicationClient
@@ -13,7 +12,6 @@ from app.config.flask_config import DevConfig
 
 db = SQLAlchemy()
 migrate = Migrate()
-login_manager = LoginManager()
 client = WebApplicationClient(DevConfig.GOOGLE_CLIENT_ID)
 jwt = JWTManager()
 redis = FlaskRedis()
@@ -34,11 +32,13 @@ api = Api(
 )
 
 def register_router(app: Flask):
-    from app.apis import container, auth, medium
+    from app.apis import auth_api, container_api, medium_api, event_api, tag_api
 
-    app.register_blueprint(auth.bp)
-    api.add_namespace(container.ns)
-    api.add_namespace(medium.ns)
+    app.register_blueprint(auth_api.bp)
+    api.add_namespace(container_api.ns)
+    api.add_namespace(medium_api.ns)
+    api.add_namespace(event_api.ns)
+    api.add_namespace(tag_api.ns)
 
 
 # TODO: 환경에 따른 config값 변경
@@ -49,9 +49,6 @@ def create_app():
 
     # CORS
     CORS(app)
-
-    #User session management setup
-    login_manager.init_app(app)
 
     # JWT
     jwt.init_app(app)

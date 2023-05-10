@@ -27,7 +27,8 @@ class Medium(db.Model):
     @staticmethod
     def save(container_id:int, platform_id:int, tracking_list:dict):
         medium = Medium(
-            container_id=container_id, platform_id=platform_id, tracking_list=tracking_list)
+            container_id=container_id, platform_id=platform_id, tracking_list=tracking_list
+        )
         medium.is_using = True
         db.session.add(medium)
         db.session.commit()

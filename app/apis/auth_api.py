@@ -1,5 +1,5 @@
 import json
-from app import login_manager, client, jwt, redis
+from app import client, jwt, redis
 from app.model.user import User
 from app.model.oauth_service import OauthService
 from datetime import timedelta, time
@@ -117,8 +117,3 @@ def logout():
     jti = get_jwt()['jti']
     redis.set(jti, 'true', ex=get_jwt()['exp'] - time())
     return jsonify({"msg": "Logout successful"}), 200
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)

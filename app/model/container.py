@@ -62,3 +62,8 @@ class Container(db.Model):
     def get_mediums(container_id: int):
         container = Container.get(container_id)
         return container.mediums
+    
+    @staticmethod
+    def get_events(container_id: int):
+        container = Container.get(container_id)
+        return container.events

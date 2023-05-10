@@ -1,7 +1,7 @@
 # Tag Container Manager API Server
 ## 실행방법
 ```
-pip install -r requirements.yxt
+pip install -r requirements.txt
 flask --app app --debug run --cert=adhoc
 ```
 

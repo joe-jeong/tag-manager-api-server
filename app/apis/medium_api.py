@@ -68,10 +68,10 @@ class MediumList(Resource):
         mediums = Container.get_mediums(args['container_id'])
         response = [
             {
-            "platform_id": medium.platform_id,
-            'platform_name': PlatformList.get_name(medium.platform_id),
-            "id": medium.id,
-            "is_using": medium.is_using
+                "platform_id": medium.platform_id,
+                'platform_name': PlatformList.get_name(medium.platform_id),
+                "id": medium.id,
+                "is_using": medium.is_using
             }
             for medium in mediums
         ]
@@ -124,7 +124,7 @@ class MediumManage(Resource):
     
     @ns.response(200, "매체 데이터 삭제 성공", _Schema.msg_fields)
     def delete(self, medium_id):
-        """medium_id와 일치하는 매체 데이터를 삭제합니다"""
+        """medium_id와 일치하는 매체 엔티티를 삭제합니다"""
         Medium.delete(medium_id)
         return {"msg": "ok"}, 200
 

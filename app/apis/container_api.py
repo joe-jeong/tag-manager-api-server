@@ -40,16 +40,15 @@ class ContainerList(Resource):
     @ns.response(200, '컨테이너 리스트 조회 성공', _Schema.container_list)
     def get(self):
         """현재 회원의 컨테이너 리스트를 가져옵니다."""
-        response = list()
         containers = User.get_containers(get_jwt_identity())
-
-        for container in containers:
-            response.append(
-                {"id": container.id,
-                 "name": container.name,
-                 "description": container.description
-                 }
-            )
+        response = [
+            {
+                "id": container.id,
+                "name": container.name,
+                "description": container.description
+            }
+            for container in containers
+        ]
         
         return response, 200
 
@@ -86,8 +85,6 @@ class ContainerManage(Resource):
             "id" : container.id,
             "name" : container.name,
             "description" : container.description,
-            "s3_path" : container.s3_path,
-            "file_url" : container.file_url
         }
 
         return response, 200
