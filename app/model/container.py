@@ -34,7 +34,7 @@ class Container(db.Model):
 
 
     @staticmethod
-    def save(name, description, domain, user_id):
+    def save(name:str, description:str, domain:str, user_id:int):
         container = Container(
             name = name, description=description, domain=domain, delete_flag=False)
         db.session.add(container)

@@ -4,7 +4,7 @@ from app.config.container_config import BUCKET_NAME
 from app.utils import container_util, s3_util
 from app.model.user import User
 from app.model.container import Container
-from flask_restx import Namespace, Resource, fields
+from flask_restx import Namespace, Resource, fields, reqparse
 
 ns = Namespace(
     name='container',
@@ -37,11 +37,13 @@ class _Schema():
 
 @ns.route('/list')
 class ContainerList(Resource):
-    
+    parser = reqparse.RequestParser()
+    parser.add_argument('user_id', type=int, help="유저 id")
     @ns.response(200, '컨테이너 리스트 조회 성공', _Schema.container_list)
     def get(self):
         """현재 회원의 컨테이너 리스트를 가져옵니다."""
-        containers = User.get_containers(get_jwt_identity())
+        args = self.parser.parse_args()
+        containers = User.get_containers(args['user_id'])
         response = [
             {
                 "id": container.id,
@@ -55,17 +57,20 @@ class ContainerList(Resource):
 
 @ns.route('')
 class ContainerCreate(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('user_id', type=int, help="유저 id")
+
     @ns.expect(_Schema.post_fields)
     @ns.response(201, '컨테이너 생성 성공', _Schema.msg_fields)
-    @jwt_required()
     def post(self):
         """새 컨테이너를 추가합니다."""
+        args = self.parser.parse_args()
         body = request.json
         name = body['name']
         domain = body['domain']
         desc = body['description']
 
-        Container.save(name=name, domain=domain, description=desc) 
+        Container.save(name=name, domain=domain, description=desc, user_id=args['user_id']) 
 
         return {'msg':'ok'}, 201
     
