@@ -13,31 +13,31 @@ ns = Namespace(
 
 class _Schema():
     tracking_list = ns.model('json 타입의 트래킹 id 리스트', {
-        '트래킹id 별칭': fields.Integer(description='트래킹 id')
+        'alias of tracking id': fields.Integer(description='tracking id', example="G1231343")
     })
 
     post_fields = ns.model('매체 생성/수정 시 필요 데이터', {
-        'platform_id': fields.Integer(description = "Medium ID in medium list"),
-        'container_id': fields.Integer(description="Container ID of the medium"),
+        'platform_id': fields.Integer(description = "Medium ID in medium list", example=1),
+        'container_id': fields.Integer(description="Container ID of the medium", example=1),
         'tracking_list': fields.Nested(tracking_list)
     })
 
     basic_fields = ns.model('매체 기본정보', {
-        'platform_id': fields.Integer(description='platform id'),
-        'platform_name': fields.String(description='platform name'),
-        'id': fields.Integer(description='Medium ID'),
-        'is_using': fields.Boolean(description='Whether or not the medium is running')
+        'platform_id': fields.Integer(description='platform id', example=1),
+        'platform_name': fields.String(description='platform name', example='GA'),
+        'id': fields.Integer(description='Medium ID', example=1),
+        'is_using': fields.Boolean(description='Whether or not the medium is running', example=1)
     })
 
     medium_list = fields.List(fields.Nested(basic_fields))
 
     detail_fields = ns.inherit('매체 상세정보', basic_fields, {
-        'container_id': fields.Integer(description='container_id'),
+        'container_id': fields.Integer(description='container_id', example=1),
         'tracking_list': fields.Nested(tracking_list)
     })
 
     msg_fields = ns.model('상태 코드에 따른 설명', {
-        'msg': fields.String(description='상태 코드에 대한 메세지')
+        'msg': fields.String(description='상태 코드에 대한 메세지', example='ok')
     })
     
 

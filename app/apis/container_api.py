@@ -13,25 +13,26 @@ ns = Namespace(
 
 class _Schema():
     post_fields = ns.model('컨테이너 생성시 필요 데이터', {
-        'name': fields.String(description='Container Name'),
-        'description': fields.String(description='Container Description')
+        'name': fields.String(description='Container Name', example='test container 1') ,
+        'description': fields.String(description='Container Description', example='Container for tag management'),
+        'domain': fields.String(description='Domain of the Container', example='https://www.samsung.com')
     })
 
-    basic_fields = ns.inherit('컨테이너 기본 정보', post_fields, {
-        'id': fields.Integer(description='Container ID'),
+    basic_fields = ns.model('컨테이너 기본 정보', {
+        'id': fields.Integer(description='Container ID', example=1),
+        'name': fields.String(description='Container Name', example='test container 1'),
     })
 
     detail_fields = ns.inherit('컨테이너 상세 정보', basic_fields, {
-        's3_path': fields.String(description='S3 storage path of the file'),
-        'file_url': fields.String(description='URL where the file is saved')
+        'domain': fields.String(description='Domain of the Container', example='https://www.samsung.com/'),
+        'description': fields.String(description='Container Description', example='Container for tag management')
     })
 
     msg_fields = ns.model('상태 코드에 따른 설명', {
-        'msg': fields.String(description='상태 코드에 대한 메세지')
+        'msg': fields.String(description='상태 코드에 대한 메세지', example='ok')
     })
 
     container_list = fields.List(fields.Nested(basic_fields))
-    url_list = fields.List(fields.String, description='스크립트가 저장된 s3 url')
 
 
 @ns.route('/list')
@@ -44,8 +45,7 @@ class ContainerList(Resource):
         response = [
             {
                 "id": container.id,
-                "name": container.name,
-                "description": container.description
+                "name": container.name
             }
             for container in containers
         ]
@@ -62,13 +62,10 @@ class ContainerCreate(Resource):
         """새 컨테이너를 추가합니다."""
         body = request.json
         name = body['name']
+        domain = body['domain']
         desc = body['description']
 
-        container = Container.save_empty_entity(get_jwt_identity())
-        tag = container_util.get_container_tag(container.id)
-        s3_path, s3_url = s3_util.put_s3(tag, 'container')
-
-        container.update(name=name, description=desc, s3_path=s3_path, file_url=s3_url) 
+        Container.save(name=name, domain=domain, description=desc) 
 
         return {'msg':'ok'}, 201
     
@@ -84,7 +81,8 @@ class ContainerManage(Resource):
         response = {
             "id" : container.id,
             "name" : container.name,
-            "description" : container.description,
+            "domain" : container.domain,
+            "description" : container.description
         }
 
         return response, 200
@@ -96,9 +94,11 @@ class ContainerManage(Resource):
         """container_id와 일치하는 컨테이너의 정보를 수정합니다."""
         data = request.json
         name = data['name']
+        domain = data['domain']
         desc = data['description']
 
-        Container.update_info(container_id, name, desc)
+        container = Container.get(container_id)
+        container.update(name, domain, desc)
 
         return jsonify({"status": "ok"}), 200
 
@@ -108,8 +108,6 @@ class ContainerManage(Resource):
     def delete(self, container_id):
         """container_id와 일치하는 컨테이너를 삭제합니다."""
         user_id = get_jwt_identity()
-        key = s3_util.extract_path_from_url(Container.get(container_id).file_url)
-        s3_util.delete_s3(key)
         Container.delete(user_id, container_id)
 
         return jsonify({"status": "ok"}), 200

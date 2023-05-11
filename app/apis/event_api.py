@@ -14,26 +14,26 @@ ns = Namespace(
 class _Schema():
 
     post_fields = ns.model('이벤트 생성/수정 시 필요 데이터', {
-        'name': fields.String(desciprtion='Event name'),
-        'func_code': fields.String(description='Event function js code'),
-        'url_reg': fields.String(description='Regular expression for the url of the page where the event will be triggered'),
-        "container_id": fields.Integer(description='Container ID')
+        'name': fields.String(desciprtion='Event name', example='test event 1'),
+        'func_code': fields.String(description='Event function js code', example='button1.addEventListener("click", (ev)=> ...)'),
+        'url_reg': fields.String(description='Regular expression for the url of the page where the event will be triggered', example='/^https?:\/\/(?:www\.)?[-a-zA-Z ...'),
+        "container_id": fields.Integer(description='Container ID', example=1)
     })
 
     basic_fields = ns.model('이벤트 기본정보', {
-        'id': fields.Integer(description='event id'),
-        'name': fields.String(description='event name')
+        'id': fields.Integer(description='event id', example=1),
+        'name': fields.String(description='event name', example='test event 1')
     })
 
     detail_fields = ns.inherit('이벤트 상세정보', basic_fields, {
-        'func_code': fields.String(description='event function js code'),
-        'url_reg': fields.Integer(desciption='Regular expression for the url of the page where the event will be triggered')
+        'func_code': fields.String(description='event function js code', example='button1.addEventListener("click", (ev)=> ...)'),
+        'url_reg': fields.Integer(desciption='Regular expression for the url of the page where the event will be triggered', example='/^https?:\/\/(?:www\.)?[-a-zA-Z ...')
     })
 
     event_list = fields.List(fields.Nested(basic_fields))
 
     msg_fields = ns.model('상태 코드에 따른 설명', {
-        'msg': fields.String(description='상태 코드에 대한 메세지')
+        'msg': fields.String(description='상태 코드에 대한 메세지', example='ok')
     })
 
 @ns.route('/list')

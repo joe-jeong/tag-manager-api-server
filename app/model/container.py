@@ -8,15 +8,14 @@ import json
 class Container(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
+    domain = db.Column(db.String(150))
     description = db.Column(db.String(100))
     delete_flag = db.Column(db.Boolean)
 
-    def update(self, name, description, s3_path, file_url):
+    def update(self, name, domain, description):
         self.name = name
         self.description = description
-        self.s3_path = s3_path
-        self.file_url = file_url
-        self.delete_flag = False
+        self.domain = domain
         db.session.commit()
 
 
@@ -35,21 +34,14 @@ class Container(db.Model):
 
 
     @staticmethod
-    def save(name, description, s3_path, file_url, user_id):
+    def save(name, description, domain, user_id):
         container = Container(
-            name = name, description=description, s3_path=s3_path, file_url=file_url, delete_flag=False)
+            name = name, description=description, domain=domain, delete_flag=False)
         db.session.add(container)
         container.users.append(User.get(user_id))
         db.session.commit()
 
         return container
-
-    @staticmethod
-    def update_info(id, name, desc):
-        container = Container.get(id)
-        container.name = name
-        container.description = desc
-        db.session.commit()
     
     @staticmethod
     def delete(user_id, container_id):

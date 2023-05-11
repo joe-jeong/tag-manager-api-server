@@ -13,48 +13,48 @@ ns = Namespace(
 
 class _Schema():
     param_list = ns.model('json 타입의 파라미터 리스트', {
-        '파라미터 이름': fields.String(description='파라미터 값')
+        'parameter name': fields.String(description='parameter value', example='123121')
     })
 
     post_fields = ns.model('태그 생성 시 필요 데이터', {
         "param": fields.Nested(param_list),
-        'script': fields.String(description='tag script js code'),
-        'event_id': fields.Integer(description='Event ID of the tag'),
-        "medium_id": fields.Integer(description='Medium ID of the tag')
+        'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}"),
+        'event_id': fields.Integer(description='Event ID of the tag', example=1),
+        "medium_id": fields.Integer(description='Medium ID of the tag', example=1)
     })
 
     put_fields = ns.model('태그 수정 시 필요 데이터', {
         "param": fields.Nested(param_list),
-        'script': fields.String(description='tag script js code')
+        'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}")
     })
 
 
-    basic_fields = ns.model('태그 기본정보', {
-        'id': fields.Integer(description='event id'),
-        "param": fields.Nested(param_list),
-        'script': fields.String(description='tag script js code')
+    basic_fields = ns.inherit('태그 기본정보', put_fields,{
+        'id': fields.Integer(description='event id', example=1)
     })
 
-    detail_fields = ns.inherit('태그 상세정보', {
-        'event_id': fields.Integer(description='Event_id of tage'),
-        "medium_id": fields.Integer(description='Medium ID of the tag')
+    detail_fields = ns.inherit('태그 상세정보', basic_fields, {
+        'event_id': fields.Integer(description='Event_id of tage', example=1),
+        "medium_id": fields.Integer(description='Medium ID of the tag', example=1)
     })
 
     tag_list = fields.List(fields.Nested(basic_fields))
 
     msg_fields = ns.model('상태 코드에 따른 설명', {
-        'msg': fields.String(description='상태 코드에 대한 메세지')
+        'msg': fields.String(description='상태 코드에 대한 메세지', example='ok')
     })
+    
 
-
-@ns.route('/list')
-class GetTagList(Resource):
+@ns.route('')
+@ns.doc(params={'event_id': {'description': '이벤트 id', 'in': 'query', 'type': 'int'},
+                'medium_id': {'description': '매체 id', 'in': 'query', 'type': 'int'}})
+class GetTagOrCreate(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('event_id', type=int, help="이벤트 id")
     parser.add_argument('medium_id', type=int, help="매체 id")
-    @ns.response(200, '태그 리스트 조회 성공', _Schema.tag_list)
+    @ns.response(200, '태그 조회 성공', _Schema.tag_list)
     def get(self):
-        """선택한 매체와 이벤트에 연결된 태그들을 조회합니다."""
+        """선택한 매체와 이벤트에 연결된 태그를 조회합니다."""
         args = self.parser.parse_args()
         tags = Tag.get_by_event_and_medium(args['event_id'], args['medium_id'])
         response = [
@@ -66,10 +66,8 @@ class GetTagList(Resource):
             for tag in tags
         ]
         return response, 200
-    
 
-@ns.route('')
-class TagCreate(Resource):
+
     @ns.expect(_Schema.post_fields)
     @ns.response(201, '태그 생성 성공')
     def post(self):
