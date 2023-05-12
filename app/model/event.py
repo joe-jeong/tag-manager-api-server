@@ -11,6 +11,10 @@ class Event(db.Model):
     @staticmethod
     def get(id):
         return Event.query.get(id)
+    
+    @staticmethod
+    def get_by_name(name):
+        return Event.query.filter(Event.name == name).first()
 
     @staticmethod
     def save(container_id:int, name:str, func_code:str, url_reg:str):
@@ -21,8 +25,8 @@ class Event(db.Model):
         db.session.commit()
     
     @staticmethod
-    def delete(id:int):
-        db.session.delete(Event.get(id))
+    def delete(name:str):
+        db.session.delete(Event.get_by_name(name))
         db.session.commit()
 
     def update(self, name:str, event_func:str, url_reg:str):

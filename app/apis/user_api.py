@@ -8,5 +8,5 @@ from flask_restx import Namespace, Resource, fields, reqparse
 
 ns = Namespace(
     name='user',
-    description='매체 관련 API'
+    description='유저 관련 API'
 )

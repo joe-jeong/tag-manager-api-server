@@ -17,6 +17,7 @@ class PlatformList(db.Model):
 
 class Medium(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
     is_using = db.Column(db.Boolean)
     tracking_list = db.Column(db.JSON)
     container_id = db.Column(db.Integer, db.ForeignKey("container.id"))
@@ -25,9 +26,9 @@ class Medium(db.Model):
     platform = db.relationship('PlatformList', backref='mediums')
 
     @staticmethod
-    def save(container_id:int, platform_id:int, tracking_list:dict):
+    def save(container_id:int, name:str, platform_id:int, tracking_list:dict):
         medium = Medium(
-            container_id=container_id, platform_id=platform_id, tracking_list=tracking_list
+            container_id=container_id, name=name, platform_id=platform_id, tracking_list=tracking_list
         )
         medium.is_using = True
         db.session.add(medium)
@@ -38,11 +39,16 @@ class Medium(db.Model):
         return Medium.query.get(id)
     
     @staticmethod
-    def delete(id:int):
-        medium = Medium.get(id)
+    def get_by_name(name:str):
+        return Medium.query.filter(Medium.name == name).first()
+    
+    @staticmethod
+    def delete(name:str):
+        medium = Medium.get_by_name(name)
         db.session.delete(medium)
         db.session.commit()
     
-    def update_tracking_list(self, tracking_list:dict):
+    def update_name_tracking_list(self, name:str, tracking_list:dict):
+        self.name = name
         self.tracking_list = tracking_list
         db.session.commit()

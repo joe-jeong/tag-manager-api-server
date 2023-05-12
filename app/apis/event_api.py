@@ -14,7 +14,7 @@ ns = Namespace(
 class _Schema():
 
     post_fields = ns.model('이벤트 생성/수정 시 필요 데이터', {
-        'name': fields.String(desciprtion='Event name', example='test event 1'),
+        'name': fields.String(desciprtion='Event name', example='test-event-1'),
         'func_code': fields.String(description='Event function js code', example='button1.addEventListener("click", (ev)=> ...)'),
         'url_reg': fields.String(description='Regular expression for the url of the page where the event will be triggered', example='/^https?:\/\/(?:www\.)?[-a-zA-Z ...'),
         "container_id": fields.Integer(description='Container ID', example=1)
@@ -22,7 +22,7 @@ class _Schema():
 
     basic_fields = ns.model('이벤트 기본정보', {
         'id': fields.Integer(description='event id', example=1),
-        'name': fields.String(description='event name', example='test event 1')
+        'name': fields.String(description='event name', example='test-event-1')
     })
 
     detail_fields = ns.inherit('이벤트 상세정보', basic_fields, {
@@ -37,15 +37,15 @@ class _Schema():
     })
 
 @ns.route('/list')
-@ns.doc(params={'container_id': {'description': '컨테이너 id', 'in': 'query', 'type': 'int'}})
+@ns.doc(params={'container_name': {'description': '컨테이너 이름', 'in': 'query', 'type': 'string'}})
 class EventList(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('container_id', type=int, help="컨테이너의 id")
+    parser.add_argument('container_name', type=str, help="컨테이너의 이름")
     @ns.response(200, '이벤트 리스트 조회 성공', _Schema.event_list)
     def get(self):
         """현재 컨테이너의 이벤트 리스트를 가져옵니다"""
         args = self.parser.parse_args()
-        events = Container.get_events(args['container_id'])
+        events = Container.get_events(args['container_name'])
         response = [
             {
                 "id": event.id,
@@ -74,14 +74,14 @@ class EventCreate(Resource):
         return {'msg':'ok'}, 201
 
 
-@ns.route('/<int:event_id>')
-@ns.doc(params={'event_id': '이벤트 id'})
+@ns.route('/<string:event_name>')
+@ns.doc(params={'event_name': '이벤트 이름'})
 class EventManage(Resource):
 
     @ns.response(200, "이벤트 정보 조회 성공", _Schema.detail_fields)
-    def get(self, event_id):
-        """event_id와 일치하는 매체의 상세정보를 가져옵니다"""
-        event = Event.get(event_id)
+    def get(self, event_name):
+        """event_name와 일치하는 매체의 상세정보를 가져옵니다"""
+        event = Event.get_by_name(event_name)
         response = {
             "id": event.id,
             "name": event.name,
@@ -90,19 +90,20 @@ class EventManage(Resource):
         }
         return response, 200
     
+
     @ns.expect(200, "새로운 매체 데이터", _Schema.post_fields)
     @ns.response(200, "매체 tracking_list 수정 성공", _Schema.msg_fields)
-    def put(self, event_id):
-        """event_id와 일치하는 event의 데이터를 수정합니다"""
+    def put(self, event_name):
+        """event_name와 일치하는 event의 데이터를 수정합니다"""
         body = request.json
-        event = Event.get(event_id)
+        event = Event.get_by_name(event_name)
         event.update(body['name'], body['func_code'], body['url_reg'])
 
         return {"msg": "ok"}, 200
 
     
     @ns.response(200, "이벤트 데이터 삭제 성공", _Schema.msg_fields)
-    def delete(self, event_id):
-        """event_id와 일치하는 event 엔티티를 삭제합니다"""
-        Event.delete(event_id)
+    def delete(self, event_name):
+        """event_name와 일치하는 event 엔티티를 삭제합니다"""
+        Event.delete(event_name)
         return {"msg": "ok"}, 200

@@ -22,6 +22,10 @@ class Container(db.Model):
     @staticmethod
     def get(id:int):
         return Container.query.get(id)
+
+    @staticmethod
+    def get_by_name(name:str):
+        return Container.query.filter(Container.name == name).first()
     
     @staticmethod
     def save_empty_entity(user_id):
@@ -51,11 +55,11 @@ class Container(db.Model):
         db.session.commit()
 
     @staticmethod
-    def get_mediums(container_id: int):
-        container = Container.get(container_id)
+    def get_mediums(container_name: str):
+        container = Container.get_by_name(container_name)
         return container.mediums
     
     @staticmethod
-    def get_events(container_id: int):
-        container = Container.get(container_id)
+    def get_events(container_name: str):
+        container = Container.get_by_name(container_name)
         return container.events
