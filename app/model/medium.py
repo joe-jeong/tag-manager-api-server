@@ -1,4 +1,5 @@
 from app import db
+from sqlalchemy import func
 import json
 
 class PlatformList(db.Model):
@@ -27,8 +28,12 @@ class Medium(db.Model):
 
     @staticmethod
     def save(container_id:int, name:str, platform_id:int, tracking_list:dict):
+
         medium = Medium(
-            container_id=container_id, name=name, platform_id=platform_id, tracking_list=tracking_list
+            container_id=container_id,
+            name=name,
+            platform_id=platform_id,
+            tracking_list=func.json_array(*tracking_list)
         )
         medium.is_using = True
         db.session.add(medium)
