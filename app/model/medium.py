@@ -26,6 +26,7 @@ class PlatformList(db.Model):
 class Medium(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     is_using = db.Column(db.Boolean)
+    base_code = db.Column(db.String(500))
     tracking_list = db.Column(db.JSON)
     container_id = db.Column(db.Integer, db.ForeignKey("container.id"))
     container = db.relationship('Container', backref='mediums')
@@ -37,7 +38,7 @@ class Medium(db.Model):
     )
 
     @staticmethod
-    def save(container_domain:str, platform_name:str, tracking_list:dict):
+    def save(container_domain:str, base_code:str, platform_name:str, tracking_list:dict):
         container = Container.get_by_domain(container_domain)
         platform = PlatformList.get_by_name(platform_name)
         try:
@@ -76,6 +77,13 @@ class Medium(db.Model):
         db.session.commit()
 
     
-    def update_tracking_list(self, tracking_list:dict):
+    def update_tracking_list(self, base_code:str, tracking_list:dict):
+        self.base_code = base_code
         self.tracking_list = tracking_list
         db.session.commit()
+
+
+    def toggle_is_using(self):
+        self.is_using = False if self.is_using else True
+        db.session.commit()
+

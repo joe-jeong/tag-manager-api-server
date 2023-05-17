@@ -29,7 +29,8 @@ class _Schema():
     })
 
     detail_fields = ns.inherit('매체 상세정보', basic_fields, {
-        'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456'))
+        'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456')),
+        'base_code': fields.String(description='매체 공통 스크립트', example="!function(f,b,e,v,n,t,s) ...")
     })
 
     medium_list = fields.List(fields.Nested(basic_fields))
@@ -100,6 +101,7 @@ class MediumManage(Resource):
         medium = Medium.get_by_container_and_platform(container_domain, platform_name)
         response = {
             'platform_name': PlatformList.get_name(medium.platform_id),
+            'base_code': medium.base_code,
             "tracking_list": medium.tracking_list,
             'is_using': medium.is_using
         }
@@ -121,3 +123,14 @@ class MediumManage(Resource):
         Medium.delete_by_container_and_platform(container_name ,medium_name)
         return {"msg": "ok"}, 200
 
+
+@ns.route('/containers/<string:container_domain>/mediums/<string:platform_name>/is_using')
+@ns.doc(params={'container_domain': '컨테이너 도메인', 'platform_name': '플랫폼 이름'})
+class MediumStatusChange(Resource):
+
+    @ns.response(200, "매체 사용 상태 변경 성공", _Schema.msg_fields)
+    def put(self, container_domain, platform_name):
+        """특정 매체의 사용 상태를 변경합니다"""
+        medium = Medium.get_by_container_and_platform(container_domain, platform_name)
+        medium.toggle_is_using()
+        return {"msg": "ok"}, 200
