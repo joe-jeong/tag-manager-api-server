@@ -44,7 +44,8 @@ class Medium(db.Model):
             medium = Medium(
                 container_id=container.id,
                 platform_id=platform.id,
-                tracking_list=func.json_array(*tracking_list)
+                tracking_list=func.json_array(*tracking_list),
+                is_using = True
             )
             db.session.add(medium)
             db.session.commit()

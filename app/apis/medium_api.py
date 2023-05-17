@@ -24,7 +24,8 @@ class _Schema():
     })
 
     basic_fields = ns.model('매체 기본정보', {
-        'platform_name': fields.String(description='platform name', example='GA')
+        'platform_name': fields.String(description='platform name', example='GA'),
+        'is_using': fields.Boolean(description='Whether the medim is in use', example=True)
     })
 
     detail_fields = ns.inherit('매체 상세정보', basic_fields, {
@@ -40,7 +41,7 @@ class _Schema():
     })
     
 
-@ns.route('/containers/platforms')
+@ns.route('/platforms')
 class GetPlatformList(Resource):
     @ns.response(200, '매체 플랫폼 리스트 조회 성공', _Schema.platform_list)
     def get(self):
@@ -64,7 +65,8 @@ class MediumListOrCreate(Resource):
         mediums = Container.get_mediums(container_domain)
         response = [
             {
-                'platform_name': PlatformList.get_name(medium.platform_id)
+                'platform_name': PlatformList.get_name(medium.platform_id),
+                'is_using': medium.is_using
             }
             for medium in mediums
         ]
@@ -97,7 +99,9 @@ class MediumManage(Resource):
         """특정 컨테이너의 한 플랫폼에 대한 매체의 상세정보를 가져옵니다"""
         medium = Medium.get_by_container_and_platform(container_domain, platform_name)
         response = {
+            'platform_name': PlatformList.get_name(medium.platform_id),
             "tracking_list": medium.tracking_list,
+            'is_using': medium.is_using
         }
         return response, 200
     

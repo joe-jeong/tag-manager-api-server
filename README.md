@@ -18,7 +18,7 @@ flask --app app --debug run --cert=adhoc
 - /containers/{container_domain}  DELETE  특정 컨테이너 삭제
 
 ### 매체 관련 API
-- /containers/platforms  GET  서비스에서 사용가능한 플랫폼(GA, Pixel, ...) 리스트 가져오기
+- /platforms  GET  서비스에서 사용가능한 플랫폼(GA, Pixel, ...) 리스트 가져오기
 - /containers/{container_domain}/mediums  GET  특정 컨테이너의 매체 리스트
 - /containers/{container_domain}/mediums  POST  특정 컨테이너에 매체 추가
 - /containers/{container_domain}/mediums/{platform_name}  GET  특정 매체 조회

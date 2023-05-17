@@ -7,7 +7,7 @@ from oauthlib.oauth2 import WebApplicationClient
 from flask_jwt_extended import JWTManager
 from flask_redis import FlaskRedis
 
-from app.config.flask_config import DevConfig
+from app.config.flask_config import LocalConfig, DevConfig
 
 
 db = SQLAlchemy()
@@ -45,7 +45,7 @@ def register_router(app: Flask):
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(DevConfig)
+    app.config.from_object(LocalConfig)
 
     # CORS
     CORS(app)
