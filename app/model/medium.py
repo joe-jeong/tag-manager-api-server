@@ -15,6 +15,16 @@ class PlatformList(db.Model):
         return PlatformList.query.all()
     
     @staticmethod
+    def get_all_except_registered(container_domain:str):
+        container = Container.get_by_domain(container_domain)
+        registered_ids = [medium.platform_id for medium in container.mediums]
+        all_ids = [row.id for row in PlatformList.query.with_entities(PlatformList.id).all()]
+        target_ids = list(filter(lambda x: x not in registered_ids, all_ids))
+
+        return PlatformList.query.filter(PlatformList.id.in_(target_ids))
+    
+    
+    @staticmethod
     def get_by_name(name:str):
         return PlatformList.query.filter(PlatformList.name == name).first()
     
@@ -45,6 +55,7 @@ class Medium(db.Model):
             medium = Medium(
                 container_id=container.id,
                 platform_id=platform.id,
+                base_code=base_code,
                 tracking_list=func.json_array(*tracking_list),
                 is_using = True
             )
@@ -77,7 +88,7 @@ class Medium(db.Model):
         db.session.commit()
 
     
-    def update_tracking_list(self, base_code:str, tracking_list:dict):
+    def update_code_and_tracking_list(self, base_code:str, tracking_list:dict):
         self.base_code = base_code
         self.tracking_list = tracking_list
         db.session.commit()

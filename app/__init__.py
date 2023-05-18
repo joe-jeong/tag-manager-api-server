@@ -45,7 +45,7 @@ def register_router(app: Flask):
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(LocalConfig)
+    app.config.from_object(DevConfig)
 
     # CORS
     CORS(app)
