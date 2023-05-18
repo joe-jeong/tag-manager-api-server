@@ -54,8 +54,8 @@ class Event(db.Model):
         db.session.delete(Event.get_by_container_and_name(container_name, event_name))
         db.session.commit()
 
-    def update(self, name:str, event_func:str, url_reg:str):
+    def update(self, name:str, func_code:str, url_reg:str):
         self.name = name
-        self.event_func = event_func
+        self.func_code = func_code
         self.url_reg = url_reg
         db.session.commit()
