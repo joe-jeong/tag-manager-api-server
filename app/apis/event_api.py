@@ -86,8 +86,8 @@ class EventManage(Resource):
         return response, 200
     
 
-    @ns.expect(200, "새로운 매체 데이터", _Schema.post_fields)
-    @ns.response(200, "매체 tracking_list 수정 성공", _Schema.msg_fields)
+    @ns.expect(200, "새로운 이벤트 데이터", _Schema.post_fields)
+    @ns.response(200, "이벤트 정보 수정 성공", _Schema.msg_fields)
     def put(self, container_domain, event_name):
         """특정 컨테이너 내에서 event_domain와 일치하는 event의 데이터를 수정합니다"""
         body = request.json

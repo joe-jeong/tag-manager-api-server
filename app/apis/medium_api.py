@@ -16,10 +16,12 @@ class _Schema():
 
     post_fields = ns.model('매체 생성 시 필요 데이터', {
         'platform_name': fields.String(description = "Platform name in platform list", example='카카오'),
+        'base_code': fields.String(description='base code of medium', example="!function(f,b,e,v,n,t,s) ..."),
         'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456'))
     })
 
     put_fields = ns.model('매체 수정 시 필요 데이터', {
+        'base_code': fields.String(description='base code of medium', example="!function(f,b,e,v,n,t,s) ..."),
         'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456'))
     })
 
@@ -30,7 +32,7 @@ class _Schema():
 
     detail_fields = ns.inherit('매체 상세정보', basic_fields, {
         'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456')),
-        'base_code': fields.String(description='매체 공통 스크립트', example="!function(f,b,e,v,n,t,s) ...")
+        'base_code': fields.String(description='base code of medium', example="!function(f,b,e,v,n,t,s) ...")
     })
 
     medium_list = fields.List(fields.Nested(basic_fields))
@@ -43,11 +45,16 @@ class _Schema():
     
 
 @ns.route('/platforms')
+@ns.doc(params={'container_domain': {'description': '컨테이너 도메인', 'in': 'query', 'type': 'string'},})
 class GetPlatformList(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('container_domain', type=str, help="컨테이너 도메인")
+
     @ns.response(200, '매체 플랫폼 리스트 조회 성공', _Schema.platform_list)
     def get(self):
-        """서비스에서 사용가능한 플랫폼 리스트를 가져옵니다."""
-        platforms = PlatformList.get_all()
+        """컨테이너에 등록되지 않은 플랫폼 리스트를 조회합니다."""
+        args = self.parser.parse_args()
+        platforms = PlatformList.get_all_except_registered(args['container_domain'])
         response = [
             {
                 "name": platform.name
@@ -81,9 +88,10 @@ class MediumListOrCreate(Resource):
         """현재 컨테이너에 매체 정보를 추가합니다"""
         body = request.json
         platform_name = body['platform_name']
+        base_code = body['base_code']
         tracking_list = body['tracking_list']
 
-        medium = Medium.save(container_domain, platform_name, tracking_list)
+        medium = Medium.save(container_domain, platform_name, base_code, tracking_list)
 
         if not medium:
             return {'msg':'컨테이너 내에 동일한 이름의 매체가 이미 존재합니다.'}, 400
@@ -112,9 +120,10 @@ class MediumManage(Resource):
     def put(self, container_domain, platform_name):
         """특정 컨테이너의 한 플랫폼에 대한 매체의 tracking_id 데이터를 수정합니다"""
         body = request.json
+        base_code = body['base_code']
         tracking_list = body['tracking_list']
         medium = Medium.get_by_container_and_platform(container_domain, platform_name)
-        medium.update_tracking_list(tracking_list)
+        medium.update_code_and_tracking_list(base_code, tracking_list)
         return {"msg": "ok"}, 200
     
     @ns.response(200, "매체 데이터 삭제 성공", _Schema.msg_fields)
