@@ -13,19 +13,14 @@ ns = Namespace(
 )
 
 class _Schema():
-    param_list = ns.model('json 타입의 파라미터 리스트', {
-        'parameter name': fields.String(description='parameter value', example='123121')
-    })
 
     post_fields = ns.model('태그 생성 시 필요 데이터', {
         "name": fields.String(description='Tag name', example='Test-Tag-1'),
-        "param": fields.Nested(param_list),
         'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}")
     })
 
     basic_fields = ns.model('태그 수정/조회 시 필요 데이터', {
         "name": fields.String(description='Tag name', example='Test-Tag-1'),
-        "param": fields.Nested(param_list),
         'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}")
     })
 
@@ -48,20 +43,17 @@ class GetTagOrCreate(Resource):
     def get(self, container_domain):
         """선택한 매체와 이벤트에 연결된 태그를 조회합니다."""
         args = self.parser.parse_args()
-        tags = Tag.get_by_event_and_medium(container_domain, args['platform_name'], args['event_name'])
-        response = [{
+        tag = Tag.get_by_event_and_medium(container_domain, args['platform_name'], args['event_name'])
+        response = {
                 "name": tag.name,
-                "param": tag.param,
                 "script": tag.script
             }
-            for tag in tags
-        ]
-            
+
         return response, 200
 
 
     @ns.expect(_Schema.post_fields)
-    @ns.response(201, '태그 생성 성공')
+    @ns.response(201, '태그 생성 성공', _Schema.msg_fields)
     @ns.response(400, '태그 추가 실패', _Schema.msg_fields)
     def post(self, container_domain):
         """선택한 매체와 이벤트에 연결되는 태그를 생성합니다"""
@@ -91,7 +83,6 @@ class TagManage(Resource):
         tag = Tag.get_by_container_and_name(container_domain, tag_name)
         response = {
                 "name": tag.name,
-                "param": tag.param,
                 "script": tag.script
             }
 
@@ -104,7 +95,7 @@ class TagManage(Resource):
         """medium_name와 일치하는 매체의 tracking_id 데이터를 수정합니다"""
         body = request.json
         tag = Tag.get_by_container_and_name(container_domain, tag_name)
-        tag.update(body['name'], body['param'], body['script'])
+        tag.update(body['name'], body['script'])
         return {"msg": "ok"}, 200
 
     

@@ -7,6 +7,7 @@ class User(db.Model):
     oauth_id = db.Column(db.Integer, db.ForeignKey('oauth_service.id'))
     oauth_service = db.relationship('OauthService', backref='users')
     asset_id = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(10))
     containers = db.relationship(
         'Container', secondary = UserContainer.__table__, backref=db.backref('users', lazy=True))
     
@@ -17,12 +18,12 @@ class User(db.Model):
         return User.query.get(id)
 
     @staticmethod
-    def get_by_oauth_asset_id(oauth_id:int, asset_id:str):
-        return User.query.filter(OauthService.id == oauth_id, User.asset_id == asset_id).first()
+    def get_by_oauth_asset_id(oauth, asset_id:str):
+        return User.query.filter(User.oauth_service == oauth, User.asset_id == asset_id).first()
     
     @staticmethod
-    def save(oauth_id, asset_id):
-        user = User(oauth_id=oauth_id, asset_id=asset_id)
+    def save(oauth_id, asset_id, code):
+        user = User(oauth_id=oauth_id, asset_id=asset_id, code=code)
         db.session.add(user)
         db.session.commit()
     
@@ -30,3 +31,7 @@ class User(db.Model):
     def get_containers(user_id: int):
         user = User.get(user_id)
         return user.containers
+    
+    @staticmethod
+    def get_by_code(code:str):
+        return User.query.filter(User.code == code).first()

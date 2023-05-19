@@ -27,7 +27,7 @@ class Tag(db.Model):
         medium = Medium.get_by_container_and_platform(container_domain, platform_name)
         event = Event.get_by_container_and_name(container_domain, event_name)
 
-        return Tag.query.filter(Tag.medium==medium, Tag.event==event).all()
+        return Tag.query.filter(Tag.medium==medium, Tag.event==event).first()
     
     @staticmethod
     def get_by_id(id:int):
@@ -36,7 +36,7 @@ class Tag(db.Model):
     @staticmethod
     def get_by_container_and_name(container_domain:str, name:str):
         container = Container.get_by_domain(container_domain)
-        return Tag.query.filter(Tag.container_id == container.id, Tag.name == name).first()
+        return Tag.query.filter(Tag.container == container, Tag.name == name).first()
     
 
     @staticmethod
@@ -68,8 +68,7 @@ class Tag(db.Model):
         db.session.commit()
 
     
-    def update(self, name:str, param:dict, script:str):
+    def update(self, name:str, script:str):
         self.name = name
-        self.param = param
         self.script = script
         db.session.commit()
