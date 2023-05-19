@@ -53,7 +53,7 @@ class GetTagOrCreate(Resource):
 
 
     @ns.expect(_Schema.post_fields)
-    @ns.response(201, '태그 생성 성공')
+    @ns.response(201, '태그 생성 성공', _Schema.msg_fields)
     @ns.response(400, '태그 추가 실패', _Schema.msg_fields)
     def post(self, container_domain):
         """선택한 매체와 이벤트에 연결되는 태그를 생성합니다"""
