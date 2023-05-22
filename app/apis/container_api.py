@@ -33,18 +33,15 @@ class _Schema():
 
     container_list = fields.List(fields.Nested(basic_fields))
 
-
 @ns.route('')
-@ns.doc(params={'user_id': {'description': '유저 id', 'in': 'query', 'type': 'int'}})
 class ContainerListOrCreate(Resource):
-    parser = reqparse.RequestParser()
-    parser.add_argument('user_id', type=int, help="유저 id")
 
+    @jwt_required()
     @ns.response(200, '컨테이너 리스트 조회 성공', _Schema.container_list)
     def get(self):
         """현재 회원의 컨테이너 리스트를 가져옵니다."""
-        args = self.parser.parse_args()
-        containers = User.get_containers(args['user_id'])
+        user_code = get_jwt_identity()
+        containers = User.get_containers(user_code)
         response = [
             {
                 "name": container.name,
@@ -54,19 +51,19 @@ class ContainerListOrCreate(Resource):
         ]
         return response, 200
 
-
+    @jwt_required()
     @ns.expect(_Schema.post_fields)
     @ns.response(201, '컨테이너 생성 성공', _Schema.msg_fields)
     @ns.response(400, '컨테이너 생성 실패', _Schema.msg_fields)
     def post(self):
         """새 컨테이너를 추가합니다."""
-        args = self.parser.parse_args()
+        user_code = get_jwt_identity()
         body = request.json
         name = body['name']
         domain = body['domain']
         desc = body['description']
 
-        container = Container.save(name=name, domain=domain, description=desc, user_id=args['user_id']) 
+        container = Container.save(name=name, domain=domain, description=desc, user_code=user_code) 
 
         if not container:
             return {'msg':'이미 존재하는 도메인입니다.'}, 400
