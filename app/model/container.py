@@ -28,10 +28,10 @@ class Container(db.Model):
         return Container.query.filter(Container.domain == domain).first()
 
     @staticmethod
-    def save(name:str, description:str, domain:str, user_code:str):
+    def save(description:str, domain:str, user_code:str):
         try:
             container = Container(
-                name = name, description=description, domain=domain, delete_flag=False)
+                description=description, domain=domain, delete_flag=False)
             db.session.add(container)
             container.users.append(User.get(user_code))
             db.session.commit()
@@ -59,8 +59,7 @@ class Container(db.Model):
         return container.events
     
 
-    def update(self, name, domain, description):
-      self.name = name
+    def update(self, domain, description):
       self.description = description
       self.domain = domain
       db.session.commit()

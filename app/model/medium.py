@@ -48,7 +48,7 @@ class Medium(db.Model):
     )
 
     @staticmethod
-    def save(container_domain:str, base_code:str, platform_name:str, tracking_list:dict):
+    def save(container_domain:str, platform_name:str, base_code:str, tracking_list:dict):
         container = Container.get_by_domain(container_domain)
         platform = PlatformList.get_by_name(platform_name)
         try:

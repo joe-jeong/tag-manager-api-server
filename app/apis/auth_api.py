@@ -77,8 +77,9 @@ class GoogleLogin(Resource):
                 'code': code,
                 'client_id': DevConfig.GOOGLE_CLIENT_ID,
                 "client_secret": DevConfig.GOOGLE_CLIENT_SECRET,
-                #'redirect_uri': 'http://localhost:3000/login/google/callback',
-                'redirect_uri': request.base_url,
+                'redirect_uri': 'http://localhost:3000/login/google/callback',
+                #'redirect_uri': request.base_url,
+
                 'grant_type': 'authorization_code'
             }
 

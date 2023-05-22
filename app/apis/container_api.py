@@ -44,7 +44,6 @@ class ContainerListOrCreate(Resource):
         containers = User.get_containers(user_code)
         response = [
             {
-                "name": container.name,
                 "domain": container.domain
             }
             for container in containers
@@ -59,11 +58,10 @@ class ContainerListOrCreate(Resource):
         """새 컨테이너를 추가합니다."""
         user_code = get_jwt_identity()
         body = request.json
-        name = body['name']
         domain = body['domain']
         desc = body['description']
 
-        container = Container.save(name=name, domain=domain, description=desc, user_code=user_code) 
+        container = Container.save(domain=domain, description=desc, user_code=user_code) 
 
         if not container:
             return {'msg':'이미 존재하는 도메인입니다.'}, 400
@@ -80,7 +78,6 @@ class ContainerManage(Resource):
         """container_domain와 일치하는 컨테이너의 상세 정보를 가져옵니다."""
         container = Container.get_by_domain(container_domain)
         response = {
-            "name" : container.name,
             "domain" : container.domain,
             "description" : container.description
         }
@@ -92,12 +89,11 @@ class ContainerManage(Resource):
     def put(self, container_domain):
         """container_domain와 일치하는 컨테이너의 정보를 수정합니다."""
         data = request.json
-        name = data['name']
         domain = data['domain']
         desc = data['description']
 
         container = Container.get_by_domain(container_domain)
-        container.update(name, domain, desc)
+        container.update(domain, desc)
 
         return {"status": "ok"}, 200
 
