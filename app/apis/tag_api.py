@@ -40,15 +40,19 @@ class GetTagOrCreate(Resource):
     parser.add_argument('event_name', type=str, help="이벤트 이름")
     
     @ns.response(200, '태그 조회 성공', _Schema.tag_list)
+    @ns.response(400, '태그 조회 실패', _Schema.msg_fields)
     def get(self, container_domain):
         """선택한 매체와 이벤트에 연결된 태그를 조회합니다."""
         args = self.parser.parse_args()
         tag = Tag.get_by_event_and_medium(container_domain, args['platform_name'], args['event_name'])
+        
+        if not tag:
+            return {'msg':'해당 플랫폼과 이벤트에 연결된 태그가 존재하지 않습니다'}, 404
+        
         response = {
                 "name": tag.name,
                 "script": tag.script
             }
-
         return response, 200
 
 
