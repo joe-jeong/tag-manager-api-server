@@ -73,26 +73,35 @@ class GoogleLogin(Resource):
         args = self.parser.parse_args()
         code = args['code']
         token_endpoint = google_provider_conf['token_endpoint']
-
-        token_url, headers, body = client.prepare_token_request(
-            token_endpoint,
-            authorization_response=request.url,
-            redirect_url=request.base_url,
-            code = code
-        )
+        token_request_payload = {
+                'code': code,
+                'client_id': DevConfig.GOOGLE_CLIENT_ID,
+                "client_secret": DevConfig.GOOGLE_CLIENT_SECRET,
+                'redirect_uri': 'http://localhost:3000/login/google/callback',
+                #'redirect_uri': request.base_url,
+                'grant_type': 'authorization_code'
+            }
 
         token_response = requests.post(
-            token_url,
-            headers=headers,
-            data=body,
-            auth=(DevConfig.GOOGLE_CLIENT_ID, DevConfig.GOOGLE_CLIENT_SECRET)
+            token_endpoint,
+            headers = {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data=token_request_payload
         )
-
-        client.parse_request_body_response(json.dumps(token_response.json()))
+        token_body = token_response.json()
+        access_token = token_body['access_token']
+        # client.parse_request_body_response(json.dumps(token_response.json()))
 
         userinfo_endpoint = google_provider_conf['userinfo_endpoint']
-        uri, headers, body = client.add_token(userinfo_endpoint)
-        userinfo_response = requests.get(uri, headers=headers, data=body)
+        # uri, headers, body = client.add_token(userinfo_endpoint)
+        userinfo_response = requests.get(
+            userinfo_endpoint,
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                },
+            )
 
         if userinfo_response.json().get("email_verified"):
             unique_id = userinfo_response.json()["sub"]
@@ -106,7 +115,7 @@ class GoogleLogin(Resource):
         if not user:
             code = generate_user_code()
             User.save(oauth.id, unique_id, code)
-            user = User.get_by_oauth_asset_id(oauth.id, unique_id)
+            user = User.get_by_oauth_asset_id(oauth, unique_id)
 
         access_token = create_access_token(identity=user.code, expires_delta=timedelta(hours=10))
         refresh_token = create_refresh_token(identity=user.code)
