@@ -3,7 +3,7 @@ from app import client, jwt, redis
 from app.model.user import User
 from app.model.oauth_service import OauthService
 from datetime import timedelta, time
-
+from urllib.parse import urlencode
 from flask import Blueprint, redirect, request, url_for, jsonify, make_response
 from flask_restx import Namespace, Resource, fields, reqparse
 
@@ -79,6 +79,7 @@ class GoogleLogin(Resource):
                 "client_secret": DevConfig.GOOGLE_CLIENT_SECRET,
                 'redirect_uri': 'http://localhost:3000/login/google/callback',
                 #'redirect_uri': request.base_url,
+
                 'grant_type': 'authorization_code'
             }
 

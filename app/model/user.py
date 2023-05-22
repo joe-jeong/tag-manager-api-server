@@ -14,8 +14,8 @@ class User(db.Model):
     __table_args__ = (db.UniqueConstraint('oauth_id', 'asset_id'),)
 
     @staticmethod
-    def get(id:int):
-        return User.query.get(id)
+    def get(code:str):
+        return User.query.filter(User.code==code).first()
 
     @staticmethod
     def get_by_oauth_asset_id(oauth, asset_id:str):
@@ -28,8 +28,8 @@ class User(db.Model):
         db.session.commit()
     
     @staticmethod
-    def get_containers(user_id: int):
-        user = User.get(user_id)
+    def get_containers(user_code: str):
+        user = User.get(user_code)
         return user.containers
     
     @staticmethod

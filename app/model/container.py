@@ -28,12 +28,12 @@ class Container(db.Model):
         return Container.query.filter(Container.domain == domain).first()
 
     @staticmethod
-    def save(name:str, description:str, domain:str, user_id:int):
+    def save(name:str, description:str, domain:str, user_code:str):
         try:
             container = Container(
                 name = name, description=description, domain=domain, delete_flag=False)
             db.session.add(container)
-            container.users.append(User.get(user_id))
+            container.users.append(User.get(user_code))
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
