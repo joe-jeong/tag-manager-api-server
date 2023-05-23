@@ -57,24 +57,23 @@ class GetTagOrCreate(Resource):
 
 
     @ns.expect(_Schema.post_fields)
-    @ns.response(201, '태그 생성 성공', _Schema.msg_fields)
-    @ns.response(400, '태그 추가 실패', _Schema.msg_fields)
+    @ns.response(200, '태그 생성/수정 성공', _Schema.msg_fields)
+    @ns.response(400, '태그 생성/수정 실패', _Schema.msg_fields)
     def post(self, container_domain):
-        """선택한 매체와 이벤트에 연결되는 태그를 생성합니다"""
+        """선택한 매체와 이벤트에 연결되는 태그를 생성/수정합니다"""
         args = self.parser.parse_args()
         body = request.json
         name = body['name']
         event_name = args['event_name']
         platform_name = args['platform_name']
-        param = body['param']
         script = body['script']
 
-        tag = Tag.save(container_domain, event_name, platform_name, name, param, script)
+        tag = Tag.save(container_domain, event_name, platform_name, name, script)
 
         if not tag:
             return {'msg':'컨테이너 내에 동일한 이름의 태그가 이미 존재합니다.'}, 400
         
-        return {'msg':'ok'}, 201
+        return {'msg':'ok'}, 200
 
 
 @ns.route('/containers/<string:container_domain>/tags/<string:tag_name>')
@@ -89,19 +88,8 @@ class TagManage(Resource):
                 "name": tag.name,
                 "script": tag.script
             }
-
         return response, 200
     
-
-    @ns.expect(200, "새로운 태그 데이터", _Schema.basic_fields)
-    @ns.response(200, "태그 데이터 수정 성공", _Schema.msg_fields)
-    def put(self, container_domain, tag_name):
-        """medium_name와 일치하는 매체의 tracking_id 데이터를 수정합니다"""
-        body = request.json
-        tag = Tag.get_by_container_and_name(container_domain, tag_name)
-        tag.update(body['name'], body['script'])
-        return {"msg": "ok"}, 200
-
     
     @ns.response(200, "태그 데이터 삭제 성공", _Schema.msg_fields)
     def delete(self, tag_name):

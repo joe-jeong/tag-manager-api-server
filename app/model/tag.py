@@ -10,7 +10,6 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     script = db.Column(db.String(500))
-    param = db.Column(db.JSON)
     container_id = db.Column(db.Integer, db.ForeignKey("container.id"))
     container = db.relationship('Container', backref='tags')
     event_id = db.Column(db.Integer, db.ForeignKey("event.id"))
@@ -20,6 +19,7 @@ class Tag(db.Model):
 
     __table_args__ = (
         UniqueConstraint('name', 'container_id', name='uix_name_container'),
+        UniqueConstraint('medium_id', 'event_id', name='uix_medium_event')
     )
 
     @staticmethod
@@ -40,7 +40,7 @@ class Tag(db.Model):
     
 
     @staticmethod
-    def save(container_domain:str, event_name:str, platform_name:str, name:str, param:dict, script:str):
+    def save(container_domain:str, event_name:str, platform_name:str, name:str, script:str):
         container = Container.get_by_domain(container_domain)
         medium = Medium.get_by_container_and_platform(container_domain, platform_name)
         event = Event.get_by_container_and_name(container_domain, event_name)
@@ -51,14 +51,18 @@ class Tag(db.Model):
                 medium_id=medium.id,
                 container_id=container.id,
                 name=name,
-                param=param,
                 script=script
             )
             db.session.add(tag)
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            return None
+            if Tag.get_by_container_and_name(container_domain, name):
+                return None
+            
+            tag = Tag.get_by_event_and_medium(container_domain, platform_name, event_name)
+            if tag:
+                tag.update(name, script)
 
         return tag
         
@@ -69,6 +73,10 @@ class Tag(db.Model):
 
     
     def update(self, name:str, script:str):
-        self.name = name
-        self.script = script
-        db.session.commit()
+        try:
+            self.name = name
+            self.script = script
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return None

@@ -13,14 +13,13 @@ ns = Namespace(
 
 class _Schema():
     post_fields = ns.model('컨테이너 생성시 필요 데이터', {
-        'name': fields.String(description='Container Name', example='test-container-1') ,
         'description': fields.String(description='Container Description', example='Container for tag management'),
-        'domain': fields.String(description='Domain of the Container', example='https://www.samsung.com')
+        'domain': fields.String(description='Domain of the Container', example='samsung.com')
     })
 
     basic_fields = ns.model('컨테이너 기본 정보', {
         'name': fields.String(description='Container Name', example='test-container-1'),
-        'domain': fields.String(description='Domain of the Container', example='https://www.samsung.com/')
+        'domain': fields.String(description='Domain of the Container', example='samsung.com')
     })
 
     detail_fields = ns.inherit('컨테이너 상세 정보', basic_fields, {

@@ -4,7 +4,7 @@ from app.model.user import User
 from app.model.oauth_service import OauthService
 from datetime import timedelta, time
 from urllib.parse import urlencode
-from flask import Blueprint, redirect, request, url_for, jsonify, make_response
+from flask import Blueprint, redirect, request, url_for, jsonify, make_response, current_app
 from flask_restx import Namespace, Resource, fields, reqparse
 
 from flask_jwt_extended import (
@@ -77,9 +77,7 @@ class GoogleLogin(Resource):
                 'code': code,
                 'client_id': DevConfig.GOOGLE_CLIENT_ID,
                 "client_secret": DevConfig.GOOGLE_CLIENT_SECRET,
-                'redirect_uri': 'http://localhost:3000/login/google/callback',
-                #'redirect_uri': request.base_url,
-
+                'redirect_uri': current_app.config['GOOGLE_REDIRECT_URI'],
                 'grant_type': 'authorization_code'
             }
 
@@ -92,10 +90,8 @@ class GoogleLogin(Resource):
         )
         token_body = token_response.json()
         access_token = token_body['access_token']
-        # client.parse_request_body_response(json.dumps(token_response.json()))
 
         userinfo_endpoint = google_provider_conf['userinfo_endpoint']
-        # uri, headers, body = client.add_token(userinfo_endpoint)
         userinfo_response = requests.get(
             userinfo_endpoint,
             headers={

@@ -11,11 +11,11 @@ ns = Namespace(name='medium', description='매체 관련 API', path='/')
 class _Schema():
 
     platform_fields = ns.model('플렛폼 기본 정보', {
-        'name': fields.String(description = "Platform name", example='Google Analytics')
+        'name': fields.String(description = "Platform name", example='kakao')
     })
 
     post_fields = ns.model('매체 생성 시 필요 데이터', {
-        'platform_name': fields.String(description = "Platform name in platform list", example='카카오'),
+        'platform_name': fields.String(description = "Platform name in platform list", example='kakao'),
         'base_code': fields.String(description='base code of medium', example="!function(f,b,e,v,n,t,s) ..."),
         'tracking_list': fields.List(fields.String(description='tracking ID', example='G123456'))
     })

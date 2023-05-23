@@ -9,7 +9,6 @@ import json
 
 class Container(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
     domain = db.Column(db.String(150))
     description = db.Column(db.String(100))
     delete_flag = db.Column(db.Boolean)
