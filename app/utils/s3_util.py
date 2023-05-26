@@ -30,7 +30,7 @@ def extract_path_from_url(url):
     return match.group(1) if match else None
 
 
-def put_s3(code:str, folder_name:str):
+def put_code_on_s3(code:str, folder_name:str):
     filename = str(uuid.uuid4()) + '.js'
 
     s3_client = s3_connection()
@@ -43,9 +43,22 @@ def put_s3(code:str, folder_name:str):
         ContentEncoding='utf-8'
 
     )    
-    s3_url = f"https://{BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com/{s3_path}"
+    s3_path = f"{s3_base_url}{s3_path}"
+    return s3_path
 
-    return s3_path, s3_url
+
+def put_js_on_s3(file_path:str):
+    file_name = str(uuid.uuid4()) + '.js'
+
+    s3_client = s3_connection()
+    s3_path = f"script/{file_name}"
+    s3_client.upload_file(
+        file_path, BUCKET_NAME, s3_path
+    )
+
+    s3_path = f"{s3_base_url}{s3_path}"
+    return file_name, s3_path
+
 
 def delete_s3(key:str):
     s3_client = s3_connection()

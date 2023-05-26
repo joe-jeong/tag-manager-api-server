@@ -1,3 +1,9 @@
 *config.py
 __pycache__/
 migrations/
+
+js_files/*
+!js_files/index.js
+
+# Dependencies
+/node_modules

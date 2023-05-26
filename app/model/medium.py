@@ -31,6 +31,7 @@ class PlatformList(db.Model):
     @staticmethod
     def get_name(id:int):
         return PlatformList.query.get(id).name
+    
 
 
 class Medium(db.Model):

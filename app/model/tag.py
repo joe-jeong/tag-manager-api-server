@@ -57,14 +57,14 @@ class Tag(db.Model):
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            if Tag.get_by_container_and_name(container_domain, name):
-                return None
-            
             tag = Tag.get_by_event_and_medium(container_domain, platform_name, event_name)
             if tag:
                 tag.update(name, script)
-
+                return tag
+            if Tag.get_by_container_and_name(container_domain, name):
+                return None
         return tag
+            
         
     @staticmethod
     def delete(name:str):

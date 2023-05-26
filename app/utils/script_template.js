@@ -1,3 +1,6 @@
+fetch('https://localhost:5000/scripts/samsung.com').then(response => response.json()).then(data => {const s3Url = data.s3_path;const script = document.createElement('script');script.src = s3Url;script.onload = function() {console.log('JavaScript 파일이 성공적으로 로드되었습니다.');};script.onerror = function() {console.error('JavaScript 파일 로드 중 에러가 발생하였습니다.');};document.head.appendChild(script);}).catch(error => {console.error('GET 요청 중 오류가 발생하였습니다:', error);});
+
+    
 // dataLayer 정의
 let dataLayer = [];
 

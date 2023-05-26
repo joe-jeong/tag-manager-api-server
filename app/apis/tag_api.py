@@ -15,12 +15,12 @@ ns = Namespace(
 class _Schema():
 
     post_fields = ns.model('태그 생성 시 필요 데이터', {
-        "name": fields.String(description='Tag name', example='Test-Tag-1'),
+        "name": fields.String(description='Tag name', example='tag1'),
         'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}")
     })
 
     basic_fields = ns.model('태그 수정/조회 시 필요 데이터', {
-        "name": fields.String(description='Tag name', example='Test-Tag-1'),
+        "name": fields.String(description='Tag name', example='tag1'),
         'script': fields.String(description='tag script js code', example="(event)=>{gtag('event', 'submit');}")
     })
 

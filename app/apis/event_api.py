@@ -15,13 +15,13 @@ ns = Namespace(
 class _Schema():
 
     post_fields = ns.model('이벤트 생성/수정 시 필요 데이터', {
-        'name': fields.String(desciprtion='Event name', example='test-event-1'),
+        'name': fields.String(desciprtion='Event name', example='event1'),
         'func_code': fields.String(description='Event function js code', example='button1.addEventListener("click", (ev)=> ...)'),
         'url_reg': fields.String(description='Regular expression for the url of the page where the event will be triggered', example='/^https?:\/\/(?:www\.)?[-a-zA-Z ...')
     })
 
     basic_fields = ns.model('이벤트 기본정보', {
-        'name': fields.String(description='event name', example='test-event-1')
+        'name': fields.String(description='event name', example='event1')
     })
 
     detail_fields = ns.inherit('이벤트 상세정보', basic_fields, {

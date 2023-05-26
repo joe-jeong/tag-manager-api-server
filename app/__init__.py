@@ -32,7 +32,7 @@ api = Api(
 )
 
 def register_router(app: Flask):
-    from app.apis import auth_api, container_api, medium_api, event_api, tag_api
+    from app.apis import auth_api, container_api, medium_api, event_api, tag_api, script_api
 
     app.register_blueprint(auth_api.bp)
     api.add_namespace(auth_api.ns)
@@ -40,6 +40,7 @@ def register_router(app: Flask):
     api.add_namespace(medium_api.ns)
     api.add_namespace(event_api.ns)
     api.add_namespace(tag_api.ns)
+    api.add_namespace(script_api.ns)
 
 
 # TODO: 환경에 따른 config값 변경
